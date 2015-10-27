@@ -57,7 +57,7 @@ prog def dirfile
 		forv i = 1/`: word count `dirfiles'' {
 		
 			// Print message to screen and get user input
-			di as res `"Delete the file `i' from `path' ? (Y/n)"' _request(_del)
+			di as res `"Delete the file `: word `i' of `dirfiles'' from `path' ? (Y/n)"' _request(_del)
 			
 			// If user enters nothing, y, or Y delete the file
 			if inlist(`"`del'"', "y", "Y", "") {
@@ -75,8 +75,11 @@ prog def dirfile
 		// Check for files in directory again
 		loc dirfiles : dir `"`path'"' files "*", respectcase
 		
+		// Check for files in directory again
+		loc subdirs : dir `"`path'"' dirs "*", respectcase
+		
 		// If the directory is empty 
-		if `"`dirfiles'"' == "" {
+		if `"`dirfiles'`subdirs'"' == "" {
 		
 			// Ask user if they want to delete the directory
 			di as res `"`path' is empty.  Delete the directory too? (Y/n)"'  ///   
