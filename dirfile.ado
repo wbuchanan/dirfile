@@ -18,8 +18,8 @@
 ********************************************************************************
 		
 *! dirfile
-*! v 0.0.1
-*! 14OCT2015
+*! v 0.0.2
+*! 03NOV2015
 
 // Drop the program from memory if loaded
 cap prog drop dirfile
@@ -89,7 +89,7 @@ prog def dirfile
 			if inlist(`"`del'"', "y", "Y") {
 			
 				// Remove the directory
-				qui: rmdir `"`i'"'
+				qui: rmdir `"`path'"'
 				
 			} // End IF Block for directory removal
 			
