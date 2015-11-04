@@ -13,13 +13,13 @@
 *     void																	   *
 *                                                                              *
 * Lines -                                                                      *
-*     111                                                                      *
+*     121                                                                      *
 *                                                                              *
 ********************************************************************************
 		
 *! dirfile
-*! v 0.0.2
-*! 03NOV2015
+*! v 0.0.3
+*! 04NOV2015
 
 // Drop the program from memory if loaded
 cap prog drop dirfile
@@ -104,6 +104,10 @@ prog def dirfile
 		di as res "Directory exists and rebuild option not specified.  No further action"
 	
 	} // End ELSEIF Block for continuance action
+	
+	// Work around for stupid Windoze bug
+	else if _rc == 603 & `"`c(os)'"' == "Windows" {
+	} // End ELSE IF Block for stupid Windows bug
 	
 	// Some other error with the file path	
 	else {
