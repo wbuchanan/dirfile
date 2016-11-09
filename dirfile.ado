@@ -13,12 +13,12 @@
 *     void																	   *
 *                                                                              *
 * Lines -                                                                      *
-*     128                                                                      *
+*     134                                                                      *
 *                                                                              *
 ********************************************************************************
 		
 *! dirfile
-*! v 0.0.5
+*! v 0.0.6
 *! 09NOV2016
 
 // Drop the program from memory if loaded
@@ -34,10 +34,13 @@ prog def dirfile
 	syntax [anything(name = root id = "Root directory")], [ Path(string) REBuild ]
 	
 	// Default value for path parameter
-	if `"`path'"' == "" loc path "*"
+	if `"`path'"' == "" loc pmatch "*"
+	
+	// Passes the value from the path parameter to be used in extended macro function
+	else loc pmatch `path'
 	
 	// Check for file path existence
-	qui: loc newfile : dir "`root'" dirs "`path'", respectcase
+	qui: loc newfile : dir "`root'" dirs "`pmatch'", respectcase
 	
 	// Clean up quotation marks
 	loc newfile : list clean newfile
