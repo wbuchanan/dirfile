@@ -13,13 +13,13 @@
 *     void																	   *
 *                                                                              *
 * Lines -                                                                      *
-*     164                                                                      *
+*     204                                                                      *
 *                                                                              *
 ********************************************************************************
 		
 *! dirfile
-*! v 0.0.7
-*! 21FEB2018
+*! v 0.0.8
+*! 21FEB2020
 
 // Drop the program from memory if loaded
 cap prog drop dirfile
@@ -94,72 +94,112 @@ end
 prog def chksubdir
 
 	// Defines syntax for calling the subroutine
-	syntax anything(name = subdirnm id = "Subdirectory name")
+	syntax anything(name = subdirnm id = "Subdirectory name") [, ALL] 
 	
-	// Check for any subdirectories
-	loc dirfiles : dir `"`subdirnm'"' dir "*", respectcase
+	// Test if the all parameter was passed
+	if `"`all'"' == "all" {
+		
+		// Check for filenames
+		loc filenames : dir `"`subdirnm'"' files "*", respectcase
 
-	// If there are subdirectories
-	if `: word count `dirfiles'' > 0 {
-	
-		// Loop over subdirectories
-		forv d = 1/`: word count `dirfiles'' {
-		
-			// Call the subroutine recursively
-			chksubdir `subdirnm'/`: word `d' of `dirfiles''
+		// Loop over the filenames
+		foreach v of loc filenames {
 			
-		} // Loop over the subdirectories
+			// Remove each file
+			erase `"`subdirnm'/`v'"'
+			
+		} // End Loop over file names
 		
-	} // End IF Block for subdirectory recursion
+		// Remove the subdirectory being checked
+		qui: rmdir `"`subdirnm'"'
+				
+	} // End IF Block for case where all parameter is passed
+
+	// If the all Parameter is not set
+	else {
 		
-	// Check for filenames
-	loc filenames : dir `"`subdirnm'"' files "*", respectcase
-	
-	// Test if the subdirectory contains any files
-	if `: word count `filenames'' > 0 {
-	
-		// Loop over the files in the directory
-		forv i = 1/`: word count `filenames'' {
+		// Check for any subdirectories
+		loc dirfiles : dir `"`subdirnm'"' dir "*", respectcase
 		
-			// Stores the individual file name to check/test
-			loc filenm `: word `i' of `filenames''
+		// If there are subdirectories
+		if `: word count `dirfiles'' > 0 {
 		
+			// Loop over subdirectories
+			forv d = 1/`: word count `dirfiles'' {
+			
+				// Call the subroutine recursively
+				chksubdir `subdirnm'/`: word `d' of `dirfiles''
+				
+			} // Loop over the subdirectories
+			
+		} // End IF Block for subdirectory recursion
+			
+		// Check for filenames
+		loc filenames : dir `"`subdirnm'"' files "*", respectcase
+		
+		// Test if the subdirectory contains any files
+		if `: word count `filenames'' > 0 {
+			
 			// Print message to screen and get user input
-			di as res `"Delete the file `filenm' from `subdirnm'? (Y/n)"' _request(_del)
-			
-			// If user enters nothing, y, or Y delete the file
+			di as res `"Delete `subdirnm' and its contents? (Y/n)"' _request(_del)
+
+			// Check for potential "all" values
 			if inlist(`"`del'"', "y", "Y", "") {
-			
-				// Erase the file from the disk
-				erase `"`subdirnm'/`filenm'"'
 				
-				// Success message to console
-				di as res `"Erased the file : `subdirnm'/`filenm'"'
+				// Recurse into the subroutine with the all parameter set
+				chksubdir `subdirnm', all
 				
-			} // End IF Block for user selected file deletion
+			} // End of ELSEIF block to handle delete all files
 			
-		} // End Loop over files in directory
+			// Otherwise iterate through individual files
+			else {
+				
+				// Loop over the files in the directory
+				forv i = 1/`: word count `filenames'' {
+				
+					// Stores the individual file name to check/test
+					loc filenm `: word `i' of `filenames''
+				
+					// Print message to screen and get user input
+					di as res `"Delete the file `filenm' from `subdirnm'? (Y/n)"' _request(_del)
+					
+					// If user enters nothing, y, or Y delete the file
+					if inlist(`"`del'"', "y", "Y", "") {
+					
+						// Erase the file from the disk
+						erase `"`subdirnm'/`filenm'"'
+						
+						// Success message to console
+						di as res `"Erased the file : `subdirnm'/`filenm'"'
+						
+					} // End IF Block for user selected file deletion
+					
+				} // End Loop over files in directory
+				
+			} // End ELSE Block to iterate over individual files
+			
+		} // End IF BLOCK for subdirectories with files
 		
-	} // End IF BLOCK for subdirectories with files
+		// Check for any subdirectories
+		cap loc dirfiles : dir `"`subdirnm'"' dir "*", respectcase
+
+		// Check for filenames
+		cap loc filenames : dir `"`subdirnm'"' files "*", respectcase
+		
+		// If the directory is empty 
+		if `"`dirfiles'`filenames'"' == "" {
+
+			// Ask user if they want to delete the directory
+			di as res `"`subdirnm' is empty.  Delete the directory too? (Y/n)"'  ///   
+			_request(_del)
+
+			// If y, Y, or null delete the directory
+			if inlist(`"`del'"', "y", "Y") qui: rmdir `"`subdirnm'"'
+				
+		} // End IF Block for directory removal
+
+	} // End ELSE Block for inital call and iteration over files
 	
-	// Check for any subdirectories
-	loc dirfiles : dir `"`subdirnm'"' dir "*", respectcase
-
-	// Check for filenames
-	loc filenames : dir `"`subdirnm'"' files "*", respectcase
-	
-	// If the directory is empty 
-	if `"`dirfiles'`filenames'"' == "" {
-
-		// Ask user if they want to delete the directory
-		di as res `"`subdirnm' is empty.  Delete the directory too? (Y/n)"'  ///   
-		_request(_del)
-
-		// If y, Y, or null delete the directory
-		if inlist(`"`del'"', "y", "Y") qui: rmdir `"`subdirnm'"'
-			
-	} // End IF Block for directory removal
-
 // End of subroutine	
 end
 
